@@ -3,21 +3,22 @@ import CoreLocation
 import WeatherKit
 import Combine
 
-
 struct DayWeather: Hashable {
     let day: String
     let symbolName: String
     let lowTemperature: String
     let highTemperature: String
     let wind: String
+    let currentCondition: String
 }
-
 
 class HomeViewModel: ObservableObject {
     @Published private(set) var currentTemperature = String()
+    @Published private(set) var feelsLikeTemperature = String()
     @Published private(set) var currentCondition = String()
     @Published private(set) var windCondition = String()
-    @Published private(set) var hourlyForecast = [HourWeather]()
+    @Published private(set) var humidity = String()
+    @Published private(set) var symbolName = String()
     @Published private(set) var threeDayForecast = [DayWeather]()
     @Published var cityName = ""
     @Published var errorMessage: String?
@@ -26,26 +27,32 @@ class HomeViewModel: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
     let locationManager: LocationManager
 
-    // Initializer to create HomeViewModel with the provided locationManager
     init(locationManager: LocationManager) {
         self.locationManager = locationManager
-        locationManager.$lastLocation
-            .compactMap { $0?.coordinate }
-            .sink { [weak self] coordinate in
-                self?.fetchThreeDayForecast(for: coordinate)
-            }
-            .store(in: &cancellables)
+        if let savedCoordinate = getSavedCoordinate() {
+            fetchWeatherData(for: savedCoordinate)
+        } else {
+            locationManager.$lastLocation
+                .compactMap { $0?.coordinate }
+                .sink { [weak self] coordinate in
+                    self?.saveCoordinate(coordinate)
+                    self?.fetchWeatherData(for: coordinate)
+                }
+                .store(in: &cancellables)
+        }
     }
 
-    // Fetches the current weather data for the given coordinates
     func fetchCurrentWeather(for coordinate: CLLocationCoordinate2D) {
         Task {
             do {
                 let weather = try await weatherService.weather(for: CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude), including: .current)
                 DispatchQueue.main.async {
                     self.currentTemperature = weather.temperature.formatted()
+                    self.feelsLikeTemperature = weather.apparentTemperature.formatted()
                     self.windCondition = weather.wind.speed.formatted()
                     self.currentCondition = weather.condition.description
+                    self.humidity = "\(weather.humidity)"
+                    self.symbolName = weather.symbolName
                 }
             } catch {
                 DispatchQueue.main.async {
@@ -55,14 +62,13 @@ class HomeViewModel: ObservableObject {
         }
     }
 
-    // Fetches the 3-day weather forecast for the given coordinates
     func fetchThreeDayForecast(for coordinate: CLLocationCoordinate2D) {
         Task {
             do {
                 let weather = try await weatherService.weather(for: CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude), including: .daily)
                 DispatchQueue.main.async {
                     self.threeDayForecast = weather.forecast.prefix(3).map {
-                        DayWeather(day: self.dayFormatter(date: $0.date), symbolName: $0.symbolName, lowTemperature: "\($0.lowTemperature.formatted().dropLast())", highTemperature: "\($0.highTemperature.formatted().dropLast())", wind: "\($0.wind.speed.formatted())")
+                        DayWeather(day: self.dayFormatter(date: $0.date), symbolName: $0.symbolName, lowTemperature: "\($0.lowTemperature.formatted().dropLast())", highTemperature: "\($0.highTemperature.formatted().dropLast())", wind: "\($0.wind.speed.formatted())", currentCondition: "\($0.condition.description)")
                     }
                 }
             } catch {
@@ -73,7 +79,6 @@ class HomeViewModel: ObservableObject {
         }
     }
 
-    // Gets the coordinates for the given city name
     func getCoordinates(for city: String, completion: @escaping (CLLocationCoordinate2D?) -> Void) {
         let geocoder = CLGeocoder()
         geocoder.geocodeAddressString(city) { placemarks, error in
@@ -93,39 +98,40 @@ class HomeViewModel: ObservableObject {
                 return
             }
             
-            completion(location.coordinate)
+            let coordinate = location.coordinate
+            self.saveCoordinate(coordinate)
+            completion(coordinate)
         }
     }
 
-    // Formats the date to a string representing the hour
+    private func fetchWeatherData(for coordinate: CLLocationCoordinate2D) {
+        fetchCurrentWeather(for: coordinate)
+        fetchThreeDayForecast(for: coordinate)
+    }
+
+    private func saveCoordinate(_ coordinate: CLLocationCoordinate2D) {
+        UserDefaults.standard.set(coordinate.latitude, forKey: "latitude")
+        UserDefaults.standard.set(coordinate.longitude, forKey: "longitude")
+    }
+
+    private func getSavedCoordinate() -> CLLocationCoordinate2D? {
+        let latitude = UserDefaults.standard.double(forKey: "latitude")
+        let longitude = UserDefaults.standard.double(forKey: "longitude")
+        if latitude != 0.0 && longitude != 0.0 {
+            return CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+        }
+        return nil
+    }
+
     private func hourFormatter(date: Date) -> String {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "ha"
         return dateFormatter.string(from: date)
     }
 
-    // Formats the date to a string representing the day of the week
     private func dayFormatter(date: Date) -> String {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "EEEE"
         return dateFormatter.string(from: date)
-    }
-
-    // Gets the city name from the given location coordinates
-    private func getAddressFromLocation(location: CLLocation) {
-        let geocoder = CLGeocoder()
-        geocoder.reverseGeocodeLocation(location) { placemarks, error in
-            guard let placemark = placemarks?.first else {
-                print("Unable to reverse geocode")
-                return
-            }
-            
-            if let name = placemark.subAdministrativeArea {
-                self.cityName = name
-                print("CityName:", name)
-            } else {
-                self.cityName = "Unknown Place"
-            }
-        }
     }
 }

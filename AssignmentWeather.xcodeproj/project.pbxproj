@@ -19,6 +19,7 @@
 		6FFAB19E2C485FB900FFBC97 /* ForecastWeatherView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FFAB19D2C485FB900FFBC97 /* ForecastWeatherView.swift */; };
 		6FFAB1A02C4860B600FFBC97 /* HomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FFAB19F2C4860B600FFBC97 /* HomeViewModel.swift */; };
 		6FFAB1A22C4860DB00FFBC97 /* LocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FFAB1A12C4860DB00FFBC97 /* LocationManager.swift */; };
+		CFEBFBE42C4961D100C9671C /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = CFEBFBE32C4961D100C9671C /* README.md */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -55,6 +56,7 @@
 		6FFAB19F2C4860B600FFBC97 /* HomeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewModel.swift; sourceTree = "<group>"; };
 		6FFAB1A12C4860DB00FFBC97 /* LocationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationManager.swift; sourceTree = "<group>"; };
 		6FFAB1A32C486A5400FFBC97 /* AssignmentWeather.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = AssignmentWeather.entitlements; sourceTree = "<group>"; };
+		CFEBFBE32C4961D100C9671C /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -85,6 +87,7 @@
 		6FFAB1612C485E3700FFBC97 = {
 			isa = PBXGroup;
 			children = (
+				CFEBFBE32C4961D100C9671C /* README.md */,
 				6FFAB16C2C485E3700FFBC97 /* AssignmentWeather */,
 				6FFAB17D2C485E3A00FFBC97 /* AssignmentWeatherTests */,
 				6FFAB1872C485E3A00FFBC97 /* AssignmentWeatherUITests */,
@@ -248,6 +251,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CFEBFBE42C4961D100C9671C /* README.md in Resources */,
 				6FFAB1752C485E3A00FFBC97 /* Preview Assets.xcassets in Resources */,
 				6FFAB1722C485E3A00FFBC97 /* Assets.xcassets in Resources */,
 			);

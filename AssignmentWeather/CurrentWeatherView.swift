@@ -10,6 +10,7 @@ struct CurrentWeatherView: View {
                 homeViewModel.getCoordinates(for: homeViewModel.cityName) { coordinate in
                     guard let coordinate = coordinate else { return }
                     homeViewModel.fetchCurrentWeather(for: coordinate)
+                    homeViewModel.fetchThreeDayForecast(for: coordinate)
                 }
             })
                 .textFieldStyle(RoundedBorderTextFieldStyle())
@@ -18,9 +19,14 @@ struct CurrentWeatherView: View {
             // Displays the current weather information if available
             if !homeViewModel.currentCondition.isEmpty {
                 VStack {
-                    Text("Current Weather: \(homeViewModel.currentCondition)")
-                    Text("Temperature: \(homeViewModel.currentTemperature)°C")
+                    HStack {
+                        Text("Weather Condition: \(homeViewModel.currentCondition)")
+                        Image(systemName: homeViewModel.symbolName)
+                    }
+                    Text("Temperature: \(homeViewModel.currentTemperature)")
+                    Text("Feels Like: \(homeViewModel.feelsLikeTemperature)")
                     Text("Wind: \(homeViewModel.windCondition)")
+                    Text("Humidity: \(homeViewModel.humidity)")
                 }
                 .padding()
             }
