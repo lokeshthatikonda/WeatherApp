@@ -30,8 +30,10 @@ class HomeViewModel: ObservableObject {
     init(locationManager: LocationManager) {
         self.locationManager = locationManager
         if let savedCoordinate = getSavedCoordinate() {
+            // If there is a saved coordinate, fetch the weather data for it
             fetchWeatherData(for: savedCoordinate)
         } else {
+            // If no saved coordinate, use the last known location
             locationManager.$lastLocation
                 .compactMap { $0?.coordinate }
                 .sink { [weak self] coordinate in
@@ -42,6 +44,7 @@ class HomeViewModel: ObservableObject {
         }
     }
 
+    // Fetch current weather data for the specified coordinate
     func fetchCurrentWeather(for coordinate: CLLocationCoordinate2D) {
         Task {
             do {
@@ -62,6 +65,8 @@ class HomeViewModel: ObservableObject {
         }
     }
 
+    // Fetch 3-day weather forecast data for the specified coordinate
+
     func fetchThreeDayForecast(for coordinate: CLLocationCoordinate2D) {
         Task {
             do {
@@ -79,6 +84,7 @@ class HomeViewModel: ObservableObject {
         }
     }
 
+    // Get the coordinates for a specified city
     func getCoordinates(for city: String, completion: @escaping (CLLocationCoordinate2D?) -> Void) {
         let geocoder = CLGeocoder()
         geocoder.geocodeAddressString(city) { placemarks, error in
@@ -104,16 +110,19 @@ class HomeViewModel: ObservableObject {
         }
     }
 
+    // Fetch both current weather and 3-day forecast data for the specified coordinate
     private func fetchWeatherData(for coordinate: CLLocationCoordinate2D) {
         fetchCurrentWeather(for: coordinate)
         fetchThreeDayForecast(for: coordinate)
     }
 
+    // Save the specified coordinate to UserDefaults
     private func saveCoordinate(_ coordinate: CLLocationCoordinate2D) {
         UserDefaults.standard.set(coordinate.latitude, forKey: "latitude")
         UserDefaults.standard.set(coordinate.longitude, forKey: "longitude")
     }
 
+    // Retrieve the saved coordinate from UserDefaults
     private func getSavedCoordinate() -> CLLocationCoordinate2D? {
         let latitude = UserDefaults.standard.double(forKey: "latitude")
         let longitude = UserDefaults.standard.double(forKey: "longitude")
@@ -123,12 +132,14 @@ class HomeViewModel: ObservableObject {
         return nil
     }
 
+    // Format a date into an hour string (e.g., "2PM")
     private func hourFormatter(date: Date) -> String {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "ha"
         return dateFormatter.string(from: date)
     }
 
+    // Format a date into a day string (e.g., "Monday")
     private func dayFormatter(date: Date) -> String {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "EEEE"
